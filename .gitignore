@@ -106,3 +106,4 @@ venv.bak/
 
 # config files
 config.json
+_config.yml
