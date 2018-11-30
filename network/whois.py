@@ -42,36 +42,78 @@ class Whois():
         '''
         return socket.getaddrinfo("%s" %(domain), 0)[0][-1][0]
 
+    def geoLookup(self, ip):
+        '''
+        geolookup on ip address
+        '''
+        api = "https://geoipify.whoisxmlapi.com/api/v1?apiKey=%s&ipAddress=%s" %(self.apikey, ip)
+        data = urllib.request.urlopen(api).read().decode('utf-8')
+        return json.loads(data)
+
+    def getReputation(self, domain):
+        '''
+        get reputation score for domain
+        '''
+        api = "https://domain-reputation-api.whoisxmlapi.com/api/v1?apiKey=%s&domainName=%s" %(self.apikey, domain)
+        data = urllib.request.urlopen(api).read().decode('utf-8')
+        return json.loads(data)
+
     def basicInfo(self, domain):
         '''
         return basic info about site
         '''
         ip = self.getIP(domain)
         who = self.whoisLookup(domain)
-        created = who['createdDate']
-        updated = who['updatedDate']
-        expires = who['expiresDate']
-        return (domain, ip), {"created": created, "updated": updated, "expires": expires}
+        geo = self.geoLookup(ip)
+        reputation = self.getReputation(domain)
+        info = {}
+        try:
+            info['created'] = who['createdDate']
+        except KeyError:
+            pass
+        try:
+            info['updated'] = who['updatedDate']
+        except KeyError:
+            pass
+        try:
+            info['expires'] = who['expiresDate']
+        except KeyError:
+            pass
+        try:
+            info['reputation'] = reputation['reputationScore']
+        except KeyError:
+            pass
+        return (domain, ip), info, geo['location']
 
     def outputInfo(self, domain):
         '''
         nicely format basicInfo()
         '''
-        header, info = self.basicInfo(domain)
+        header, info, geo = self.basicInfo(domain)
         print("Information for %s (%s)" %(header[0], header[1]))
         print("{")
         for k, v in info.items():
             print("\t%s: %s" %(k, v))
+        print("\tlocation:")
+        print("\t{")
+        for k, v in geo.items():
+            print("\t\t%s: %s" %(k, v))
+        print("\t}")
         print("}")
 
 
-def test():
+def test(domain="example.com"):
     '''
     test with google.com
     '''
     testWhois = Whois()
-    testWhois.outputInfo("google.com")
+    testWhois.outputInfo(domain)
 
 
 if __name__ == '__main__':
+    print("example.com")
     test()
+    print("")
+    print("")
+    print("google.com")
+    test("google.com")
