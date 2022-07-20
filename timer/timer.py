@@ -1,6 +1,5 @@
 import datetime
 import time
-import simpleaudio
 import numpy
 import json
 
@@ -23,8 +22,6 @@ def chime():
     audio = numpy.hstack(tuple(notes))
     audio *= 32767 / numpy.max(numpy.abs(audio))
     audio = audio.astype(numpy.int16)
-    play_obj = simpleaudio.play_buffer(audio, 1, 2, sample_rate)
-    play_obj.wait_done()
 
 
 def timer(duration):
